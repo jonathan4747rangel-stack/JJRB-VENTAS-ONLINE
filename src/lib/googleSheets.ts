@@ -22,7 +22,7 @@ const getAuth = () => {
 export const getSheetData = async (sheetName: string, range: string = 'A:Z') => {
   try {
     const auth = getAuth()
-    const authClient = await auth.getClient() as any
+    const authClient = await auth.getClient()
     
     const response = await sheets.spreadsheets.values.get({
       auth: authClient,
@@ -54,43 +54,19 @@ export const updateSheetData = async (
 ) => {
   try {
     const auth = getAuth()
-    const authClient = await auth.getClient() as any
+    const authClient = await auth.getClient()
     
     await sheets.spreadsheets.values.update({
       auth: authClient,
       spreadsheetId: process.env.GOOGLE_SHEETS_ID,
       range: `${sheetName}!${range}`,
       valueInputOption: 'RAW',
-      requestBody: {
-        values,
-      },
+      requestBody: { values },
     })
     
     return { success: true }
   } catch (error) {
     console.error(`Error al actualizar ${sheetName}:`, error)
-    return { success: false, error }
-  }
-}
-
-export const appendSheetData = async (sheetName: string, values: any[][]) => {
-  try {
-    const auth = getAuth()
-    const authClient = await auth.getClient() as any
-    
-    await sheets.spreadsheets.values.append({
-      auth: authClient,
-      spreadsheetId: process.env.GOOGLE_SHEETS_ID,
-      range: `${sheetName}!A:Z`,
-      valueInputOption: 'RAW',
-      requestBody: {
-        values,
-      },
-    })
-    
-    return { success: true }
-  } catch (error) {
-    console.error(`Error al agregar datos a ${sheetName}:`, error)
     return { success: false, error }
   }
 }
