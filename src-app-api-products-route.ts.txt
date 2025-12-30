@@ -1,0 +1,42 @@
+import { NextResponse } from 'next/server'
+import { getSheetData } from '@/lib/googleSheets'
+
+export async function GET() {
+  try {
+    // Obtener productos
+    const products = await getSheetData('PRODUCTOS', 'A2:J')
+    
+    // Obtener configuración para tasa BCV
+    const config = await getSheetData('CONFIG', 'A2:B')
+    
+    // Buscar tasa BCV en configuración
+    let tasaBCV = 36 // Valor por defecto
+    const tasaRow = config.find((row: any[]) => row[0] === 'tasabcv')
+    if (tasaRow && tasaRow[1]) {
+      tasaBCV = parseFloat(tasaRow[1])
+    }
+    
+    // Transformar los datos
+    const formattedProducts = products.map((row: any[]) => ({
+      id: row[0] || '',
+      codigo: row[1] || '',
+      nombre: row[2] || '',
+      descripcion: row[3] || '',
+      precioUSD: parseFloat(row[4]) || 0,
+      precioVES: (parseFloat(row[4]) || 0) * tasaBCV,
+      stock: parseInt(row[6]) || 0,
+      idcategoria: row[7] || '',
+      urlimagen: row[8] || '/placeholder-product.png',
+      activo: row[9] === 'TRUE' || row[9] === 'true',
+      fecha_creacion: row[10] || ''
+    })).filter((product: any) => product.activo)
+
+    return NextResponse.json(formattedProducts)
+  } catch (error) {
+    console.error('Error al obtener productos:', error)
+    return NextResponse.json(
+      { error: 'Error interno del servidor' }, 
+      { status: 500 }
+    )
+  }
+}
